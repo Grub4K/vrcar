@@ -1,0 +1,8 @@
+repos:
+- repo: local
+  hooks:
+  - id: check
+    name: code check
+    entry: hatch fmt --check
+    language: system
+    types: [python]

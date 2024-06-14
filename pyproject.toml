@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vrcar"
+dynamic = ["version"]
+description = "VR controlled Raspberry Pi car"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Simon Sawicki", email = "contact@grub4k.xyz" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = []
+
+[project.optional-dependencies]
+client = [
+  "pygame",
+]
+server = [
+  # TODO
+]
+
+[project.scripts]
+vrcar = "vrcar.__main__:main"
+
+[project.urls]
+Documentation = "https://github.com/Grub4K/vrcar"
+Issues = "https://github.com/Grub4K/vrcar/issues"
+Source = "https://github.com/Grub4K/vrcar"
+
+[tool.hatch.version]
+path = "vrcar/__init__.py"
+
+[tool.hatch.envs.default]
+path = ".venv"
+installer = "uv"
+features = ["client"]
+dependencies = [
+  "pre-commit",
+]
+
+[tool.hatch.envs.default.scripts]
+init = "pre-commit install -c pre-commit.yml"
+deinit = "pre-commit uninstall"
+vrcar = "python -m vrcar {args}"
+
+[tool.hatch.envs.server]
+detached = true
+installer = "uv"
+features = ["server"]
+
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = ["ruff==0.4.*"]
+config-path = "pyproject.toml"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+  "C4",
+  "E",
+  "F",
+  "I",
+  "PLC",
+  "PLE",
+  "PLW",
+  "PYI",
+  "RET",
+  "RUF",
+  "SIM",
+  "TD",
+  "TID",
+  "W",
+]
+ignore = [
+  "TD003",
+  "E402",
+  "PLR09",
+]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
