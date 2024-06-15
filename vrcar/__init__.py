@@ -1,4 +1,4 @@
 from __future__ import annotations
 
-version_tuple = 0, 1, 0
-__version__ = ".".join(map(str, version_tuple))
+__version__ = "0.1.0"
+version_tuple = tuple(map(int, __version__.split(".")))

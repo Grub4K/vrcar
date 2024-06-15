@@ -14,6 +14,7 @@ from vrcar.common import Command, float_struct
 
 logger = logging.getLogger()
 
+
 class Controls:
     def __init__(self, connection, vr_context=None):
         self._socket = socket.create_connection(connection)
@@ -103,7 +104,7 @@ class Controls:
             GL.glClearColor(0, 0, 1, 1)
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-            # TODO: draw image
+            # TODO(Grub4K): draw image
 
             self.head_h = view.pose.orientation.y
             self.head_v = view.pose.orientation.x
@@ -148,5 +149,5 @@ class Controls:
                         f", {self.turn=:5.2f}"
                         f", {self.head_h=:5.2f}"
                         f", {self.head_v=:5.2f}"
-                    )
+                    ),
                 )
