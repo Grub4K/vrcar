@@ -41,7 +41,8 @@ class Controls:
     def update(self):
         previous_state = self.state.copy()
 
-        for provider in self._providers:
+        # highest priority last
+        for provider in reversed(self._providers):
             if not provider.update(self.state):
                 return False
 

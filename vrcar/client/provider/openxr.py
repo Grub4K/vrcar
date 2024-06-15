@@ -42,7 +42,7 @@ class OpenXRProvider:
 
     def __enter__(self):
         self._context.__enter__()
-        self._vr_loop = iter(self._context.frame_loop())
+        self._frame_loop = iter(self._context.frame_loop())
 
         instance_props = xr.get_instance_properties(self._context.instance)
         runtime_name = instance_props.runtime_name.decode()
@@ -59,7 +59,11 @@ class OpenXRProvider:
         pass
 
     def update(self, state: dict[Command, float]) -> bool:
-        for view in self._context.view_loop(next(self._vr_loop)):
+        frame_data = next(self._frame_loop, None)
+        if not frame_data:
+            return False
+
+        for view in self._context.view_loop(frame_data):
             GL.glClearColor(0, 0, 1, 1)
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
@@ -67,3 +71,7 @@ class OpenXRProvider:
             self.head_v = view.pose.orientation.x
 
         return True
+
+    def _get_stuff(self):
+        "/user/hand/left/input/thumbstick"
+        "/user/hand/right/input/thumbstick"
