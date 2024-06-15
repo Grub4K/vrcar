@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import socket
 
-from vrcar.common import Command, float_struct
+from vrcar.common import Commands, float_struct
 from vrcar.server.motors import Motors
 from vrcar.server.servos import Servos
 
@@ -27,25 +27,25 @@ def _run(address: tuple[str, int]):
     strafe = 0.0
     turn = 0.0
     while cmd := client.recv(1):
-        if cmd in (Command.MOVE.value, Command.STRAFE.value, Command.TURN.value):
+        if cmd in (Commands.MOVE.value, Commands.STRAFE.value, Commands.TURN.value):
             data = float_struct.unpack(client.recv(4))[0]
-            if cmd == Command.MOVE.value:
+            if cmd == Commands.MOVE.value:
                 move = data
                 motors.move(move, strafe, turn)
 
-            elif cmd == Command.STRAFE.value:
+            elif cmd == Commands.STRAFE.value:
                 strafe = data
                 motors.move(move, strafe, turn)
 
-            elif cmd == Command.TURN.value:
+            elif cmd == Commands.TURN.value:
                 turn = data
                 motors.move(move, strafe, turn)
         else:
             data = client.recv(1)[0]
-            if cmd == Command.HEAD_H.value:
+            if cmd == Commands.HEAD_H.value:
                 servos.set(0, -data)
 
-            elif cmd == Command.HEAD_V.value:
+            elif cmd == Commands.HEAD_V.value:
                 servos.set(1, data)
 
 

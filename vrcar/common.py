@@ -9,7 +9,7 @@ class suppress(contextlib.suppress, contextlib.ContextDecorator):
     pass
 
 
-class Command(enum.Enum):
+class Commands(enum.Enum):
     MOVE = b"\x01"
     STRAFE = b"\x02"
     TURN = b"\x03"

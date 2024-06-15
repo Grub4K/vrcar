@@ -24,11 +24,12 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-client = [
-  "pyopenxr",
+pygame = [
   "pygame",
+]
+vr = [
+  "pyopenxr",
   "pyOpenGl",
-  "glfw",
 ]
 server = [
   # TODO
@@ -48,7 +49,7 @@ path = "vrcar/__init__.py"
 [tool.hatch.envs.default]
 path = ".venv"
 installer = "uv"
-features = ["client"]
+features = ["vr", "pygame"]
 dependencies = [
   "pre-commit",
 ]

@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-import io
 import socket
 import threading
-
-import pygame
+import typing
 
 
 class Camera(threading.Thread):
-    def __init__(self, display: pygame.Surface, address: tuple[str, int]):
-        self._display = display
+    def __init__(
+        self,
+        address: tuple[str, int],
+        providers: list[typing.Callable[[bytes], None]],
+    ):
         self._socket = socket.create_connection(address)
+        self._providers = providers
         super().__init__(daemon=True)
 
     def run(self):
@@ -21,7 +23,5 @@ class Camera(threading.Thread):
             while len(image_data) != length:
                 image_data += self._socket.recv(length - len(image_data))
 
-            with io.BytesIO(image_data) as buffer:
-                image = pygame.image.load(buffer)
-
-            self._display.blit(image, (0, 0))
+            for provider in self._providers:
+                provider.draw(image_data)
