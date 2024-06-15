@@ -43,7 +43,8 @@ class Controls:
 
         # highest priority last
         for provider in reversed(self._providers):
-            if not provider.update(self.state):
+            running = provider.update(self.state)
+            if not running:
                 return False
 
         for command in Commands:
