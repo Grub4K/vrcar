@@ -43,7 +43,7 @@ def _run(address: tuple[str, int]):
         else:
             data = client.recv(1)[0]
             if cmd == Command.HEAD_H.value:
-                servos.set(0, data)
+                servos.set(0, -data)
 
             elif cmd == Command.HEAD_V.value:
                 servos.set(1, data)

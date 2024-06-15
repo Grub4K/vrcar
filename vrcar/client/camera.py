@@ -8,7 +8,7 @@ import pygame
 
 
 class Camera(threading.Thread):
-    def __init__(self, display: pygame.Display, address: tuple[str, int]):
+    def __init__(self, display: pygame.Surface, address: tuple[str, int]):
         self._display = display
         self._socket = socket.create_connection(address)
         super().__init__(daemon=True)

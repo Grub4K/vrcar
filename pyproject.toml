@@ -25,7 +25,10 @@ dependencies = []
 
 [project.optional-dependencies]
 client = [
+  "pyopenxr",
   "pygame",
+  "pyOpenGl",
+  "glfw",
 ]
 server = [
   # TODO

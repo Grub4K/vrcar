@@ -9,7 +9,9 @@ import contextlib
 import logging
 
 import pygame
+import xr
 
+import vrcar
 from vrcar.client.camera import Camera
 from vrcar.client.controls import Controls
 
@@ -27,14 +29,36 @@ def run(address: str, camera_port: int, controls_port: int):
     camera = Camera(display, (address, camera_port))
     camera.start()
 
-    stick = None
-    with contextlib.suppress(Exception):
+    for index in range(pygame.joystick.get_count()):
         stick = pygame.joystick.Joystick(0)
         stick.init()
-        logger.info(f"Setup controller 0: {stick.get_name()}")
+        logger.info(f"Setup controller {index}: {stick.get_name()}")
 
-    with contextlib.suppress(KeyboardInterrupt):
-        controls = Controls((address, controls_port))
+    vr_context = None
+    with contextlib.suppress(xr.exception.XrException):
+        vr_context = xr.ContextObject(
+            instance_create_info=xr.InstanceCreateInfo(
+                application_info=xr.ApplicationInfo(
+                    application_name="vrcar",
+                    application_version=xr.Version(*vrcar.version_tuple),
+                ),
+                enabled_extension_names=[
+                    xr.KHR_OPENGL_ENABLE_EXTENSION_NAME,
+                ],
+            ),
+            # need to use stereo since other modes are not suported in Meta Quest 3
+            view_configuration_type=xr.ViewConfigurationType.PRIMARY_STEREO,
+        ).__enter__()
+
+        instance_props = xr.get_instance_properties(vr_context.instance)
+        runtime_name = instance_props.runtime_name.decode()
+        logger.info(f"Using VR runtime: {runtime_name}")
+
+    with contextlib.ExitStack() as stack:
+        if vr_context:
+            stack.push(vr_context)
+
+        controls = Controls((address, controls_port), vr_context)
         controls.start()
 
     pygame.quit()
