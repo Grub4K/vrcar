@@ -30,6 +30,7 @@ pygame = [
 vr = [
   "pyopenxr",
   "pyOpenGl",
+  "Pillow",
 ]
 server = [
   # TODO
@@ -58,6 +59,13 @@ dependencies = [
 init = "pre-commit install -c pre-commit.yml"
 deinit = "pre-commit uninstall"
 vrcar = "python -m vrcar {args}"
+
+[tool.hatch.envs.testing]
+installer = "uv"
+features = ["testing"]
+
+[tool.hatch.envs.testing.scripts]
+testing = "python -m vrcar.client.provider.testing"
 
 [tool.hatch.envs.server]
 detached = true

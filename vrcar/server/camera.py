@@ -34,8 +34,7 @@ def run(address: tuple[str, int]):
     picam2.configure(
         picam2.create_video_configuration(
             main={"size": (1024, 768)},
-            controls={"FrameRate": 60.0},
-            buffer_count=6,
+            buffer_count=2,
         )
     )
 

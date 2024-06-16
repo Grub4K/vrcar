@@ -4,6 +4,8 @@ import contextlib
 import enum
 import struct
 
+CAM_WIDTH, CAM_HEIGHT = 1024, 768
+
 
 class suppress(contextlib.suppress, contextlib.ContextDecorator):
     pass

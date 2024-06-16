@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import io
 import logging
 import os
 import typing
@@ -15,7 +14,10 @@ except ImportError:
     pygame: typing.Any
 
 import vrcar
-from vrcar.common import Commands
+from vrcar.common import CAM_HEIGHT, CAM_WIDTH, Commands
+
+if typing.TYPE_CHECKING:
+    import io
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class PygameProvider:
         pygame.joystick.init()
         pygame.display.set_caption(vrcar.__name__)
 
-        self._display = pygame.display.set_mode((640, 480))
+        self._display = pygame.display.set_mode((CAM_WIDTH, CAM_HEIGHT))
 
         for index in range(pygame.joystick.get_count()):
             stick = pygame.joystick.Joystick(0)
@@ -41,10 +43,8 @@ class PygameProvider:
     def __exit__(self, *_):
         pygame.quit()
 
-    def draw(self, data: bytes):
-        with io.BytesIO(data) as buffer:
-            image = pygame.image.load(buffer)
-
+    def draw(self, buffer: io.BytesIO):
+        image = pygame.image.load(buffer)
         self._display.blit(image, (0, 0))
 
     def update(self, state: dict[Commands, float]) -> bool:
@@ -53,7 +53,7 @@ class PygameProvider:
                 return False
 
             if event.type in (pygame.KEYDOWN, pygame.KEYUP):
-                value = 1.0 if event.type == pygame.KEYDOWN else 0
+                value = 1 if event.type == pygame.KEYDOWN else 0
 
                 if event.key == pygame.K_w:
                     state[Commands.MOVE] = value
@@ -66,7 +66,7 @@ class PygameProvider:
                 if event.key == pygame.K_q:
                     state[Commands.TURN] = -value
                 if event.key == pygame.K_e:
-                    state[Commands.TURN] = +value
+                    state[Commands.TURN] = value
 
                 if event.key == pygame.K_i:
                     state[Commands.HEAD_V] = value
@@ -86,6 +86,13 @@ class PygameProvider:
                     state[Commands.HEAD_H] = -event.value
                 elif event.axis == 3:
                     state[Commands.HEAD_V] = event.value
+            elif event.type in (pygame.JOYBUTTONDOWN, pygame.JOYBUTTONUP):
+                value = 1 if event.type == pygame.JOYBUTTONDOWN else 0
+
+                if event.button == 9:
+                    state[Commands.TURN] = -value
+                if event.button == 10:
+                    state[Commands.TURN] = value
 
         pygame.display.flip()
 

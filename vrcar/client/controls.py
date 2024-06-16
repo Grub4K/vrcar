@@ -8,17 +8,19 @@ from vrcar.common import Commands, float_struct
 
 logger = logging.getLogger()
 
+if typing.TYPE_CHECKING:
+
+    class Controllable(typing.Protocol):
+        def update(self, buffer: dict[Commands, float]) -> None:
+            pass
+
 
 def clamp(value, minimum, maximum):
     return minimum if value < minimum else maximum if value > maximum else value
 
 
 class Controls:
-    def __init__(
-        self,
-        address: tuple[str, int],
-        providers: list[typing.Callable[[bytes], None]],
-    ):
+    def __init__(self, address: tuple[str, int], providers: list[Controllable]):
         self._socket = socket.create_connection(address)
         self._providers = providers
 

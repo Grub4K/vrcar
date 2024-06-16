@@ -7,13 +7,17 @@ import typing
 try:
     import xr
     from OpenGL import GL
+    from PIL import Image
 except ImportError:
     xr: typing.Any
     GL: typing.Any
+    Image: typing.Any
 
 import vrcar
+from vrcar.common import CAM_HEIGHT, CAM_WIDTH, Commands
 
-from vrcar.common import Commands
+if typing.TYPE_CHECKING:
+    import io
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +26,7 @@ class OpenXRProvider:
     available = (
         importlib.util.find_spec("xr") is not None
         and importlib.util.find_spec("OpenGL") is not None
+        and importlib.util.find_spec("PIL") is not None
     )
 
     def __init__(self):
@@ -42,21 +47,42 @@ class OpenXRProvider:
     def __enter__(self):
         self._context.__enter__()
         self._frame_loop = iter(self._context.frame_loop())
-        self._setup_thumbsticks()
 
         instance_props = xr.get_instance_properties(self._context.instance)
         runtime_name = instance_props.runtime_name.decode()
 
+        self._read_texture, self._write_texture = GL.glGenTextures(2)
         logger.info(f"Using VR runtime: {runtime_name}")
         return self
 
     def __exit__(self, *args):
         self._context.__exit__(*args)
 
-    def draw(self, buffer: bytes):
-        # TODO(Grub4K): Implement replacement of image with camera image
-        # maybe decompress higher up in stack?
-        pass
+    def draw(self, buffer: io.BytesIO):
+        image = Image.open(buffer)
+        image = image.resize((CAM_WIDTH, CAM_HEIGHT))
+        data = image.tobytes("raw", "RGB")
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self._write_texture)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+
+        GL.glTexImage2D(
+            GL.GL_TEXTURE_2D,
+            0,
+            GL.GL_RGB,
+            CAM_WIDTH,
+            CAM_HEIGHT,
+            0,
+            GL.GL_RGB,
+            GL.GL_UNSIGNED_BYTE,
+            data,
+        )
+
+        self._read_texture, self._write_texture = (
+            self._write_texture,
+            self._read_texture,
+        )
 
     def update(self, state: dict[Commands, float]) -> bool:
         frame_data = next(self._frame_loop, None)
@@ -66,6 +92,20 @@ class OpenXRProvider:
         for view in self._context.view_loop(frame_data):
             GL.glClearColor(0, 0, 1, 1)
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self._read_texture)
+            GL.glEnable(GL.GL_TEXTURE_2D)
+            GL.glBegin(GL.GL_QUADS)
+
+            GL.glTexCoord2i(0, 1)
+            GL.glVertex2i(-1, -1)
+            GL.glTexCoord2i(0, 0)
+            GL.glVertex2i(-1, 1)
+            GL.glTexCoord2i(1, 0)
+            GL.glVertex2i(1, 1)
+            GL.glTexCoord2i(1, 1)
+            GL.glVertex2i(1, -1)
+
+            GL.glEnd()
 
             state[Commands.HEAD_H] = view.pose.orientation.y
             state[Commands.HEAD_V] = view.pose.orientation.x
@@ -159,3 +199,8 @@ class OpenXRProvider:
                 ),
             ),
         ]
+
+    @staticmethod
+    def _get_error():
+        while (error := GL.glGetError()) != GL.GL_NO_ERROR:
+            logger.error(error)
