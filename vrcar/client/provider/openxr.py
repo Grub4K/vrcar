@@ -5,18 +5,16 @@ import logging
 import threading
 import typing
 
-# try:
-#     import xr
-#     from OpenGL import GL
-#     import OpenGL.GL.shaders
-#     from PIL import Image
-# except ImportError:
-#     xr: typing.Any
-#     GL: typing.Any
-#     Image: typing.Any
-import xr
-from OpenGL import GL
-from PIL import Image
+try:
+    import xr
+    from OpenGL import GL
+    from OpenGL.GL import shaders
+    from PIL import Image
+except ImportError:
+    xr: typing.Any
+    GL: typing.Any
+    Image: typing.Any
+    shaders: typing.Any
 
 import vrcar
 from vrcar.common import CAM_HEIGHT, CAM_WIDTH, Commands
@@ -68,15 +66,15 @@ class OpenXRProvider:
             fragment_shader_data = file.read()
 
         try:
-            vertex_shader = GL.shaders.compileShader(
+            vertex_shader = shaders.compileShader(
                 vertex_shader_data, GL.GL_VERTEX_SHADER
             )
-            fragment_shader = GL.shaders.compileShader(
+            fragment_shader = shaders.compileShader(
                 fragment_shader_data, GL.GL_FRAGMENT_SHADER
             )
-        except GL.shaders.ShaderCompilationError as e:
+        except shaders.ShaderCompilationError as e:
             raise ValueError(e.args[0]) from None
-        self._shader = GL.shaders.compileProgram(vertex_shader, fragment_shader)
+        self._shader = shaders.compileProgram(vertex_shader, fragment_shader)
 
         self._vertices = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self._vertices)
