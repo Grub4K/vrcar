@@ -73,9 +73,9 @@ class PygameProvider:
                 if event.key == pygame.K_k:
                     state[Commands.HEAD_V] = -value
                 if event.key == pygame.K_j:
-                    state[Commands.HEAD_H] = -value
-                if event.key == pygame.K_l:
                     state[Commands.HEAD_H] = value
+                if event.key == pygame.K_l:
+                    state[Commands.HEAD_H] = -value
 
             elif event.type == pygame.JOYAXISMOTION:
                 if event.axis == 1:
@@ -83,7 +83,7 @@ class PygameProvider:
                 elif event.axis == 0:
                     state[Commands.STRAFE] = event.value
                 elif event.axis == 2:
-                    state[Commands.HEAD_H] = -event.value
+                    state[Commands.HEAD_H] = event.value
                 elif event.axis == 3:
                     state[Commands.HEAD_V] = event.value
             elif event.type in (pygame.JOYBUTTONDOWN, pygame.JOYBUTTONUP):
