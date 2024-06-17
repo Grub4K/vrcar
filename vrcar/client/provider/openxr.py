@@ -2,16 +2,21 @@ from __future__ import annotations
 
 import importlib.util
 import logging
+import threading
 import typing
 
-try:
-    import xr
-    from OpenGL import GL
-    from PIL import Image
-except ImportError:
-    xr: typing.Any
-    GL: typing.Any
-    Image: typing.Any
+# try:
+#     import xr
+#     from OpenGL import GL
+#     import OpenGL.GL.shaders
+#     from PIL import Image
+# except ImportError:
+#     xr: typing.Any
+#     GL: typing.Any
+#     Image: typing.Any
+import xr
+from OpenGL import GL
+from PIL import Image
 
 import vrcar
 from vrcar.common import CAM_HEIGHT, CAM_WIDTH, Commands
@@ -47,12 +52,40 @@ class OpenXRProvider:
     def __enter__(self):
         self._context.__enter__()
         self._frame_loop = iter(self._context.frame_loop())
+        self._new_data = None
+        self._new_data_lock = threading.Lock()
 
         instance_props = xr.get_instance_properties(self._context.instance)
         runtime_name = instance_props.runtime_name.decode()
-
-        self._read_texture, self._write_texture = GL.glGenTextures(2)
         logger.info(f"Using VR runtime: {runtime_name}")
+
+        self._texture = GL.glGenTextures(1)
+
+        with open("shader/plane.vert") as file:
+            vertex_shader_data = file.read()
+
+        with open("shader/plane.frag") as file:
+            fragment_shader_data = file.read()
+
+        try:
+            vertex_shader = GL.shaders.compileShader(
+                vertex_shader_data, GL.GL_VERTEX_SHADER
+            )
+            fragment_shader = GL.shaders.compileShader(
+                fragment_shader_data, GL.GL_FRAGMENT_SHADER
+            )
+        except GL.shaders.ShaderCompilationError as e:
+            raise ValueError(e.args[0]) from None
+        self._shader = GL.shaders.compileProgram(vertex_shader, fragment_shader)
+
+        self._vertices = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(self._vertices)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glClearColor(0.2, 0.2, 0.2, 1.0)
+        GL.glClearDepth(1.0)
+
+        logger.info("Initialized OpenXR runtime")
+
         return self
 
     def __exit__(self, *args):
@@ -61,16 +94,32 @@ class OpenXRProvider:
     def draw(self, buffer: io.BytesIO):
         image = Image.open(buffer)
         image = image.resize((CAM_WIDTH, CAM_HEIGHT))
-        data = image.tobytes("raw", "RGB")
+        with self._new_data_lock:
+            self._new_data = image.tobytes("raw", "RGB")
 
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self._write_texture)
+    def update_texture(self):
+        with self._new_data_lock:
+            if not self._new_data:
+                return
+
+            data = self._new_data
+            self._new_data = None
+
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self._texture)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(
+            GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER
+        )
+        GL.glTexParameteri(
+            GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER
+        )
+        GL.glTexParameterfv(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_BORDER_COLOR, (1, 1, 1, 1))
 
         GL.glTexImage2D(
             GL.GL_TEXTURE_2D,
             0,
-            GL.GL_RGB,
+            GL.GL_RGBA,
             CAM_WIDTH,
             CAM_HEIGHT,
             0,
@@ -79,36 +128,23 @@ class OpenXRProvider:
             data,
         )
 
-        self._read_texture, self._write_texture = (
-            self._write_texture,
-            self._read_texture,
-        )
-
     def update(self, state: dict[Commands, float]) -> bool:
         frame_data = next(self._frame_loop, None)
         if not frame_data:
             return False
 
-        for view in self._context.view_loop(frame_data):
-            GL.glClearColor(0, 0, 1, 1)
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-            GL.glBindTexture(GL.GL_TEXTURE_2D, self._read_texture)
-            GL.glEnable(GL.GL_TEXTURE_2D)
-            GL.glBegin(GL.GL_QUADS)
+        self.update_texture()
 
-            GL.glTexCoord2i(0, 1)
-            GL.glVertex2i(-1, -1)
-            GL.glTexCoord2i(0, 0)
-            GL.glVertex2i(-1, 1)
-            GL.glTexCoord2i(1, 0)
-            GL.glVertex2i(1, 1)
-            GL.glTexCoord2i(1, 1)
-            GL.glVertex2i(1, -1)
-
-            GL.glEnd()
-
+        for index, view in enumerate(self._context.view_loop(frame_data)):
             state[Commands.HEAD_H] = view.pose.orientation.y
             state[Commands.HEAD_V] = view.pose.orientation.x
+
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            GL.glUseProgram(self._shader)
+            GL.glUniform1f(0, index)
+            GL.glBindVertexArray(self._vertices)
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self._texture)
+            GL.glDrawArrays(GL.GL_TRIANGLES, 0, 6)
 
         return True
 
@@ -199,8 +235,3 @@ class OpenXRProvider:
                 ),
             ),
         ]
-
-    @staticmethod
-    def _get_error():
-        while (error := GL.glGetError()) != GL.GL_NO_ERROR:
-            logger.error(error)

@@ -71,6 +71,7 @@ class PrettyFormatter(logging.Formatter):
 def setup(name_length: int = 20, debug: bool = False):
     current_name = datetime.now().strftime("logs/%Y-%m-%d_%H-%M-%S.log")
     Path(current_name).parent.mkdir(parents=True, exist_ok=True)
+    level = logging.DEBUG if debug else logging.INFO
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
@@ -78,11 +79,11 @@ def setup(name_length: int = 20, debug: bool = False):
     formatter = PrettyFormatter(use_color=False, name_length=name_length)
     handler = logging.FileHandler(current_name, mode="a", encoding="utf8")
     handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG if debug else logging.INFO)
+    handler.setLevel(level)
     root_logger.addHandler(handler)
 
     formatter = PrettyFormatter(use_color=True, name_length=name_length)
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(formatter)
-    handler.setLevel(logging.INFO)
+    handler.setLevel(level)
     root_logger.addHandler(handler)

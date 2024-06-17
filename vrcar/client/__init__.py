@@ -23,8 +23,8 @@ def run(address: str, camera_port: int, controls_port: int):
 
             try:
                 result = stack.enter_context(provider())
-            except Exception as e:
-                logger.warning(f"{provider.__name__}: {e}")
+            except Exception:
+                logger.exception(f"Exception while loading {provider.__name__}")
             else:
                 providers.append(result)
 

@@ -29,7 +29,9 @@ pygame = [
 ]
 vr = [
   "pyopenxr",
-  "pyOpenGl",
+  "pyOpenGL",
+  # Does not work?
+  # "PyOpenGL-accelerate",
   "Pillow",
 ]
 server = [
