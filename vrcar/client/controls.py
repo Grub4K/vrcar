@@ -14,6 +14,9 @@ if typing.TYPE_CHECKING:
         def update(self, buffer: dict[Commands, float]) -> None:
             pass
 
+        def wait(self) -> None:
+            pass
+
 
 def clamp(value, minimum, maximum):
     return minimum if value < minimum else maximum if value > maximum else value
@@ -48,6 +51,8 @@ class Controls:
             running = provider.update(self.state)
             if not running:
                 return False
+
+        self._providers[0].wait()
 
         for command in Commands:
             value = self.state[command]

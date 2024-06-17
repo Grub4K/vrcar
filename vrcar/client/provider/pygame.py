@@ -25,6 +25,9 @@ logger = logging.getLogger(__name__)
 class PygameProvider:
     available = importlib.util.find_spec("pygame") is not None
 
+    def __init__(self):
+        self.sticks = []
+
     def __enter__(self):
         pygame.display.init()
         pygame.joystick.init()
@@ -33,9 +36,10 @@ class PygameProvider:
         self._display = pygame.display.set_mode((CAM_WIDTH, CAM_HEIGHT))
 
         for index in range(pygame.joystick.get_count()):
-            stick = pygame.joystick.Joystick(0)
+            stick = pygame.joystick.Joystick(index)
             stick.init()
             logger.info(f"Setup controller {index}: {stick.get_name()}")
+            self.sticks.append(stick)
 
         logger.info("Initialized")
         return self

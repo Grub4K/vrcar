@@ -28,6 +28,10 @@ def run(address: str, camera_port: int, controls_port: int):
             else:
                 providers.append(result)
 
+        if not providers:
+            logger.error("No available providers found")
+            return
+
         camera = Camera((address, camera_port), providers)
         controls = Controls((address, controls_port), providers)
 

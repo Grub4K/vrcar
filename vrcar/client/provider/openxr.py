@@ -146,6 +146,9 @@ class OpenXRProvider:
 
         return True
 
+    def wait(self):
+        pass
+
     def _setup_thumbsticks(self):
         instance = self._context.instance
         session = self._context.session
