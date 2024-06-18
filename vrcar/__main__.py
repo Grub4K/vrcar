@@ -60,9 +60,16 @@ def parse_args():
 
 
 def main():
+    import logging
+
+    import vrcar
     import vrcar.log
 
+    logger = logging.getLogger(vrcar.__name__)
+
     vrcar.log.setup(name_length=30, debug=True)
+    logger.info(f"{vrcar.__name__} v{vrcar.__version__}")
+
     args = parse_args()
 
     if args.mode == "server":

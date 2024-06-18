@@ -9,13 +9,13 @@ from pathlib import Path
 
 class PrettyFormatter(logging.Formatter):
     LOG_FORMAT = (
-        "{record.asctime}"
+        "{record.asctime}.{record.msecs:03}"
         " | {record.levelname:<8}"
         " | {record.name:<{name_length}}"
         " | {record.message}"
     )
     LOG_FORMAT_COLOR = (
-        "\x1b[30;1m{record.asctime}\x1b[0m"
+        "\x1b[32;1m{record.asctime}.{record.msecs:03}\x1b[0m"
         " | {level_color}{record.levelname:<8}\x1b[0m"
         " | \x1b[35m{record.name:<{name_length}}\x1b[0m"
         " | {record.message}"
@@ -23,11 +23,11 @@ class PrettyFormatter(logging.Formatter):
     EXC_FORMAT = "{record.exc_text}"
     EXC_FORMAT_COLOR = "\x1b[31m{record.exc_text}\x1b[0m"
     LEVEL_COLORS: Mapping[int, str] = {
-        logging.DEBUG: "\x1b[96;1m",
+        logging.DEBUG: "\x1b[36;1m",
         logging.INFO: "\x1b[34;1m",
         logging.WARNING: "\x1b[33;1m",
-        logging.ERROR: "\x1b[31m",
-        logging.CRITICAL: "\x1b[41m",
+        logging.ERROR: "\x1b[31m;1",
+        logging.CRITICAL: "\x1b[41m;1",
     }
 
     def __init__(
@@ -41,7 +41,7 @@ class PrettyFormatter(logging.Formatter):
         self._exc_format = self.EXC_FORMAT_COLOR if use_color else self.EXC_FORMAT
         # HACK: preformat name length so we don't have to store it for later
         self._log_format = self._log_format.replace("{name_length}", str(name_length))
-        super().__init__(self._log_format, style="{")
+        super().__init__(self._log_format, style="{", datefmt="%Y-%m-%d %H:%M:%s")
 
     def format(self, /, record: logging.LogRecord) -> str:
         record.asctime = self.formatTime(record, self.datefmt)

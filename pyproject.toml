@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -34,9 +34,6 @@ vr = [
   # "PyOpenGL-accelerate",
   "Pillow",
 ]
-server = [
-  # TODO
-]
 
 [project.scripts]
 vrcar = "vrcar.__main__:main"
@@ -47,7 +44,10 @@ Issues = "https://github.com/Grub4K/vrcar/issues"
 Source = "https://github.com/Grub4K/vrcar"
 
 [tool.hatch.version]
-path = "vrcar/__init__.py"
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "vrcar/_version.py"
 
 [tool.hatch.envs.default]
 path = ".venv"
@@ -61,18 +61,6 @@ dependencies = [
 init = "pre-commit install -c pre-commit.yml"
 deinit = "pre-commit uninstall"
 vrcar = "python -m vrcar {args}"
-
-[tool.hatch.envs.testing]
-installer = "uv"
-features = ["testing"]
-
-[tool.hatch.envs.testing.scripts]
-testing = "python -m vrcar.client.provider.testing"
-
-[tool.hatch.envs.server]
-detached = true
-installer = "uv"
-features = ["server"]
 
 [tool.hatch.envs.hatch-static-analysis]
 dependencies = ["ruff==0.4.*"]

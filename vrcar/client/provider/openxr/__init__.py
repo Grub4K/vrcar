@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources
 import importlib.util
 import logging
 import threading
@@ -23,6 +24,7 @@ if typing.TYPE_CHECKING:
     import io
 
 logger = logging.getLogger(__name__)
+resources = importlib.resources.files()
 
 
 class OpenXRProvider:
@@ -36,8 +38,8 @@ class OpenXRProvider:
         self._context = xr.ContextObject(
             instance_create_info=xr.InstanceCreateInfo(
                 application_info=xr.ApplicationInfo(
-                    application_name="vrcar",
-                    application_version=xr.Version(*vrcar.version_tuple),
+                    application_name=vrcar.__name__,
+                    application_version=xr.Version(*vrcar.__version_tuple__),
                 ),
                 enabled_extension_names=[
                     xr.KHR_OPENGL_ENABLE_EXTENSION_NAME,
@@ -59,11 +61,8 @@ class OpenXRProvider:
 
         self._texture = GL.glGenTextures(1)
 
-        with open("shader/plane.vert") as file:
-            vertex_shader_data = file.read()
-
-        with open("shader/plane.frag") as file:
-            fragment_shader_data = file.read()
+        vertex_shader_data = resources.joinpath("plane.vert").read_text()
+        fragment_shader_data = resources.joinpath("plane.frag").read_text()
 
         try:
             vertex_shader = shaders.compileShader(

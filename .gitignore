@@ -1,1 +1,3 @@
 *.pyc
+/dist/
+/vrcar/_version.py

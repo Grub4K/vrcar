@@ -1,4 +1,5 @@
 from __future__ import annotations
 
-__version__ = "0.1.0"
-version_tuple = tuple(map(int, __version__.split(".")))
+from vrcar._version import __version__, __version_tuple__
+
+__all__ = ["__version__", "__version_tuple__"]
