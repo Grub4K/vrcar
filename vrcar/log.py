@@ -41,7 +41,7 @@ class PrettyFormatter(logging.Formatter):
         self._exc_format = self.EXC_FORMAT_COLOR if use_color else self.EXC_FORMAT
         # HACK: preformat name length so we don't have to store it for later
         self._log_format = self._log_format.replace("{name_length}", str(name_length))
-        super().__init__(self._log_format, style="{", datefmt="%Y-%m-%d %H:%M:%s")
+        super().__init__(self._log_format, style="{", datefmt="%Y-%m-%d %H:%M:%S")
 
     def format(self, /, record: logging.LogRecord) -> str:
         record.asctime = self.formatTime(record, self.datefmt)
