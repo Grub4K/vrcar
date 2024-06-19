@@ -9,13 +9,13 @@ from pathlib import Path
 
 class PrettyFormatter(logging.Formatter):
     LOG_FORMAT = (
-        "{record.asctime}.{record.msecs:03}"
+        "{record.asctime}.{record.msecs:03.0f}"
         " | {record.levelname:<8}"
         " | {record.name:<{name_length}}"
         " | {record.message}"
     )
     LOG_FORMAT_COLOR = (
-        "\x1b[32;1m{record.asctime}.{record.msecs:03}\x1b[0m"
+        "\x1b[32;1m{record.asctime}.{record.msecs:03.0f}\x1b[0m"
         " | {level_color}{record.levelname:<8}\x1b[0m"
         " | \x1b[35m{record.name:<{name_length}}\x1b[0m"
         " | {record.message}"
